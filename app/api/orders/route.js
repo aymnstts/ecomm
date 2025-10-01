@@ -71,7 +71,7 @@ export async function POST(request){
                 total -= (total * coupon.discount) / 100;
             }
             if(!isPlusMember && !isShippingFeeAdded){
-                total += 5;
+                total += 35;
                 isShippingFeeAdded = true
             }
 

@@ -20,9 +20,10 @@ export async function POST(request){
         const mrp =  Number(formData.get("mrp"))
         const price = Number(formData.get("price"))
         const category = formData.get("category")
+        const size = formData.get("size")
         const images = formData.getAll("images")
 
-        if(!name || !description || !mrp || !price || !category || images.length < 1){
+        if(!name || !description || !mrp || !price || !category || !size || images.length < 1){
             return NextResponse.json({error: 'missing product details'}, { status: 400 } )
         }
 
@@ -52,6 +53,7 @@ export async function POST(request){
                 mrp,
                 price,
                 category,
+                size,
                 images: imagesUrl,
                 storeId
              }

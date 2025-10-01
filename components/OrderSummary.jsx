@@ -13,7 +13,7 @@ const OrderSummary = ({ totalPrice, items }) => {
     const {user} = useUser()
     const { getToken } = useAuth()
     const dispatch = useDispatch()
-    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
+    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'MAD';
 
     const router = useRouter();
 
@@ -91,10 +91,10 @@ const OrderSummary = ({ totalPrice, items }) => {
                 <input type="radio" id="COD" onChange={() => setPaymentMethod('COD')} checked={paymentMethod === 'COD'} className='accent-gray-500' />
                 <label htmlFor="COD" className='cursor-pointer'>COD</label>
             </div>
-            <div className='flex gap-2 items-center mt-1'>
+            {/* <div className='flex gap-2 items-center mt-1'>
                 <input type="radio" id="STRIPE" name='payment' onChange={() => setPaymentMethod('STRIPE')} checked={paymentMethod === 'STRIPE'} className='accent-gray-500' />
                 <label htmlFor="STRIPE" className='cursor-pointer'>Stripe Payment</label>
-            </div>
+            </div> */}
             <div className='my-4 py-4 border-y border-slate-200 text-slate-400'>
                 <p>Address</p>
                 {
@@ -131,7 +131,7 @@ const OrderSummary = ({ totalPrice, items }) => {
                     </div>
                     <div className='flex flex-col gap-1 font-medium text-right'>
                         <p>{currency}{totalPrice.toLocaleString()}</p>
-                        <p><Protect plan={'plus'} fallback={`${currency}5`}>Free</Protect></p>
+                        <p><Protect plan={'plus'} fallback={`${currency}35`}>Free</Protect></p>
                         {coupon && <p>{`-${currency}${(coupon.discount / 100 * totalPrice).toFixed(2)}`}</p>}
                     </div>
                 </div>
@@ -153,7 +153,7 @@ const OrderSummary = ({ totalPrice, items }) => {
             <div className='flex justify-between py-4'>
                 <p>Total:</p>
                 <p className='font-medium text-right'>
-                    <Protect plan={'plus'} fallback={`${currency}${coupon ? (totalPrice + 5 - (coupon.discount / 100 * totalPrice)).toFixed(2) : (totalPrice + 5).toLocaleString()}`}>  
+                    <Protect plan={'plus'} fallback={`${currency}${coupon ? (totalPrice + 35 - (coupon.discount / 100 * totalPrice)).toFixed(2) : (totalPrice + 35).toLocaleString()}`}>  
                     {currency}{coupon ? (totalPrice - (coupon.discount / 100 * totalPrice)).toFixed(2) : totalPrice.toLocaleString()}
                     </Protect>
                     </p>

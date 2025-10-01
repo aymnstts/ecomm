@@ -1,17 +1,17 @@
 'use client'
 import { useEffect, useState } from "react"
 import Loading from "@/components/Loading"
-import { orderDummyData } from "@/assets/assets"
 import { useAuth } from "@clerk/nextjs"
 import axios from "axios"
 import toast from "react-hot-toast"
+import storeLogo from "@/assets/logo_store.png";
+import shippingLogo from "@/assets/logo_shipping.png";
 
 export default function StoreOrders() {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
-
 
     const { getToken } = useAuth()
 
@@ -52,6 +52,10 @@ export default function StoreOrders() {
         setIsModalOpen(false)
     }
 
+    const printReceipt = () => {
+        window.print()
+    }
+
     useEffect(() => {
         fetchOrders()
     }, [])
@@ -84,7 +88,7 @@ export default function StoreOrders() {
                                         {index + 1}
                                     </td>
                                     <td className="px-4 py-3">{order.user?.name}</td>
-                                    <td className="px-4 py-3 font-medium text-slate-800">${order.total}</td>
+                                    <td className="px-4 py-3 font-medium text-slate-800">{order.total} MAD</td>
                                     <td className="px-4 py-3">{order.paymentMethod}</td>
                                     <td className="px-4 py-3">
                                         {order.isCouponUsed ? (
@@ -102,7 +106,7 @@ export default function StoreOrders() {
                                             className="border-gray-300 rounded-md text-sm focus:ring focus:ring-blue-200"
                                         >
                                             <option value="ORDER_PLACED">ORDER_PLACED</option>
-                                            <option value="PROCESSING">PROCESSING</option>
+                                            <option value="PROCESSING">Confirmed</option>
                                             <option value="SHIPPED">SHIPPED</option>
                                             <option value="DELIVERED">DELIVERED</option>
                                         </select>
@@ -148,7 +152,7 @@ export default function StoreOrders() {
                                         <div className="flex-1">
                                             <p className="text-slate-800">{item.product?.name}</p>
                                             <p>Qty: {item.quantity}</p>
-                                            <p>Price: ${item.price}</p>
+                                            <p>Price: {item.price} MAD</p>
                                         </div>
                                     </div>
                                 ))}
@@ -167,10 +171,95 @@ export default function StoreOrders() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex justify-end">
-                            <button onClick={closeModal} className="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300" >
+                        <div className="flex justify-end gap-2">
+                            <button 
+                                onClick={printReceipt} 
+                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                            >
+                                Print Receipt
+                            </button>
+                            <button 
+                                onClick={closeModal} 
+                                className="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300"
+                            >
                                 Close
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Print-only Receipt */}
+            {selectedOrder && (
+                <div className="print-receipt" style={{ display: 'none' }}>
+                    <div style={{ width: '4in', height: '6in', margin: '0', padding: '0.3in', fontSize: '9pt', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box', overflow: 'hidden' }}>
+                        {/* Header with Logos */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', paddingBottom: '8px', borderBottom: '2px solid #000' }}>
+                           <img src={storeLogo.src} alt="Store Logo" style={{ height: '35px', width: 'auto' }} />
+                            <img src={shippingLogo.src} alt="Shipping Logo" style={{ height: '35px', width: 'auto' }} />
+                        </div>
+
+                        {/* Receipt Title */}
+                        <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+                            <h2 style={{ margin: '0', fontSize: '14pt', fontWeight: 'bold' }}>SHIPPING RECEIPT</h2>
+                            <p style={{ margin: '5px 0 0 0', fontSize: '8pt', color: '#666' }}>Order #{selectedOrder.id}</p>
+                        </div>
+
+                        {/* Sender & Receiver Info */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px', fontSize: '8pt' }}>
+                            <div style={{ border: '1px solid #000', padding: '8px', borderRadius: '4px' }}>
+                                <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', fontSize: '9pt' }}>FROM:</p>
+                                <p style={{ margin: '2px 0', fontWeight: 'bold' }}>Aura Parfums</p>
+                                <p style={{ margin: '2px 0' }}>Marrakech, 45000</p>
+                                <p style={{ margin: '2px 0' }}>+212 6 16 11 42 60</p>
+                            </div>
+                            <div style={{ border: '1px solid #000', padding: '8px', borderRadius: '4px' }}>
+                                <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', fontSize: '9pt' }}>TO:</p>
+                                <p style={{ margin: '2px 0', fontWeight: 'bold' }}>{selectedOrder.user?.name}</p>
+                                <p style={{ margin: '2px 0' }}>{selectedOrder.address?.street}</p>
+                                <p style={{ margin: '2px 0' }}>{selectedOrder.address?.city}, {selectedOrder.address?.zip}</p>
+                                <p style={{ margin: '2px 0' }}>{selectedOrder.address?.country}</p>
+                                <p style={{ margin: '2px 0' }}>Tel: {selectedOrder.address?.phone}</p>
+                            </div>
+                        </div>
+
+                        {/* Order Items */}
+                        <div style={{ marginBottom: '12px' }}>
+                            <h3 style={{ margin: '0 0 8px 0', fontSize: '10pt', fontWeight: 'bold', borderBottom: '1px solid #000', paddingBottom: '3px' }}>PRODUCTS</h3>
+                            <table style={{ width: '100%', fontSize: '8pt', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid #ccc', backgroundColor: '#f5f5f5' }}>
+                                        <th style={{ textAlign: 'left', padding: '4px', fontWeight: 'bold' }}>Product</th>
+                                        <th style={{ textAlign: 'center', padding: '4px', fontWeight: 'bold' }}>Qty</th>
+                                        <th style={{ textAlign: 'right', padding: '4px', fontWeight: 'bold' }}>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {selectedOrder.orderItems.map((item, i) => (
+                                        <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                                            <td style={{ padding: '4px' }}>{item.product?.name}</td>
+                                            <td style={{ textAlign: 'center', padding: '4px' }}>{item.quantity}</td>
+                                            <td style={{ textAlign: 'right', padding: '4px' }}>{item.price} MAD</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Total */}
+                        <div style={{ marginBottom: '15px', fontSize: '10pt', paddingTop: '10px', borderTop: '2px solid #000' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
+                                <span style={{ fontWeight: 'bold' }}>TOTAL:</span>
+                                <span style={{ fontWeight: 'bold', fontSize: '12pt' }}>{selectedOrder.total} MAD</span>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div style={{ fontSize: '7pt', textAlign: 'center', paddingTop: '12px', borderTop: '1px solid #ccc', color: '#666' }}>
+                            <p style={{ margin: '0 0 2px 0' }}>Thank you for your order!</p>
+                            <p style={{ margin: '0' }}>aurafragrance1@gmail.com</p>
+                            <p style={{ margin: '0' }}>WhatsApp: +212 7 10 83 72 12</p>
+                            
                         </div>
                     </div>
                 </div>

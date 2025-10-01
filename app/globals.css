@@ -20,3 +20,24 @@
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .print-receipt, .print-receipt * {
+        visibility: visible;
+    }
+    .print-receipt {
+        position: fixed;
+        left: 0;
+        top: 0;
+        background: white;
+        width: 4in;
+        height: 6in;
+        display: block !important;
+    }
+    @page {
+        size: 4in 6in;
+        margin: 0;
+    }
+}

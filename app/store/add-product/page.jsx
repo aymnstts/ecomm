@@ -9,14 +9,16 @@ import { toast } from "react-hot-toast"
 export default function StoreAddProduct() {
 
     const categories = ["Men", "Women", "Packs", "Samples", "Niche Fragrances"];
+    const sizes = ["5ML", "10ML", "30ML", "50ML", "60ML", "75ML", "100ML", "125ML", "200ML"];
 
     const [images, setImages] = useState({ 1: null, 2: null, 3: null, 4: null })
     const [productInfo, setProductInfo] = useState({
         name: "",
         description: "",
-        mrp: 0,
-        price: 0,
+        mrp: "",
+        price: "",
         category: "",
+        size: "",
     })
     const [loading, setLoading] = useState(false)
     const [aiUsed, setAiUsed] = useState(false)
@@ -87,6 +89,7 @@ export default function StoreAddProduct() {
             formData.append('mrp', productInfo.mrp)
             formData.append('price', productInfo.price)
             formData.append('category', productInfo.category)
+            formData.append('size', productInfo.size)
 
             Object.keys(images).forEach((key) => {
                 images[key] && formData.append('images', images[key])
@@ -96,7 +99,7 @@ export default function StoreAddProduct() {
             const { data } = await axios.post('/api/store/product', formData, { headers: { Authorization: `Bearer ${token}` } })
             toast.success(data.message)
 
-            setProductInfo({ name: "", description: "", mrp: 0, price: 0, category: "" })
+            setProductInfo({ name: "", description: "", mrp: 0, price: 0, category: "", size: "" })
             setImages({ 1: null, 2: null, 3: null, 4: null })
             setAiUsed(false)
         } catch (error) {
@@ -144,11 +147,11 @@ export default function StoreAddProduct() {
 
             <div className="flex gap-5">
                 <label className="flex flex-col gap-2 ">
-                    Actual Price ($)
+                    Actual Price (MAD)
                     <input type="number" name="mrp" onChange={onChangeHandler} value={productInfo.mrp} placeholder="0" className="w-full max-w-45 p-2 px-4 outline-none border border-slate-200 rounded" required />
                 </label>
                 <label className="flex flex-col gap-2 ">
-                    Offer Price ($)
+                    Offer Price (MAD)
                     <input type="number" name="price" onChange={onChangeHandler} value={productInfo.price} placeholder="0" className="w-full max-w-45 p-2 px-4 outline-none border border-slate-200 rounded" required />
                 </label>
             </div>
@@ -157,6 +160,13 @@ export default function StoreAddProduct() {
                 <option value="">Select a category</option>
                 {categories.map((category) => (
                     <option key={category} value={category}>{category}</option>
+                ))}
+            </select>
+
+            <select onChange={e => setProductInfo({ ...productInfo, size: e.target.value })} value={productInfo.size} className="w-full max-w-sm p-2 px-4 mb-6 outline-none border border-slate-200 rounded" required>
+                <option value="">Select a size</option>
+                {sizes.map((size) => (
+                    <option key={size} value={size}>{size}</option>
                 ))}
             </select>
 

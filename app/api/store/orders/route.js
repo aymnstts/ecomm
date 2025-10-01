@@ -50,3 +50,53 @@ export async function GET(request){
         return NextResponse.json({ error: error.code || error.message }, { status: 400 })
     }
 }
+    export async function DELETE(request){
+        try {
+            const { userId } = getAuth(request)
+            const storeId = await authSeller(userId)
+
+            if(!storeId){
+                return NextResponse.json({ error: 'not authorized' }, { status: 401 })
+            }
+
+            // Get orderId from query params
+            const { searchParams } = new URL(request.url)
+            const orderId = searchParams.get('orderId')
+
+            if (!orderId) {
+                return NextResponse.json({ error: 'Order ID is required' }, { status: 400 })
+            }
+
+            // Verify the order belongs to this store
+            const existingOrder = await prisma.order.findUnique({
+                where: { id: orderId }
+            })
+
+            if (!existingOrder) {
+                return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+            }
+
+            if (existingOrder.storeId !== storeId) {
+                return NextResponse.json({ error: 'Not authorized to delete this order' }, { status: 403 })
+            }
+
+            // Delete order items first (if cascade delete is not set up in schema)
+            await prisma.orderItem.deleteMany({
+                where: { orderId: orderId }
+            })
+
+            // Delete the order
+            await prisma.order.delete({
+                where: { id: orderId }
+            })
+
+            return NextResponse.json({ 
+                message: 'Order deleted successfully',
+                deletedOrderId: orderId 
+            })
+
+        } catch (error) {
+            console.error('Delete order error:', error);
+            return NextResponse.json({ error: error.code || error.message }, { status: 400 })
+        }
+    }

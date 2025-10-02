@@ -18,7 +18,7 @@ export default function StoreAddProduct() {
         mrp: "",
         price: "",
         category: "",
-        sizes: [],
+        size: "",
     })
     const [loading, setLoading] = useState(false)
     const [aiUsed, setAiUsed] = useState(false)
@@ -27,15 +27,6 @@ export default function StoreAddProduct() {
 
     const onChangeHandler = (e) => {
         setProductInfo({ ...productInfo, [e.target.name]: e.target.value })
-    }
-
-    const handleSizeChange = (size) => {
-        setProductInfo(prev => {
-            const sizes = prev.sizes.includes(size)
-                ? prev.sizes.filter(s => s !== size)
-                : [...prev.sizes, size]
-            return { ...prev, sizes }
-        })
     }
 
     const handleImageUpload = async (key, file) => {
@@ -90,9 +81,6 @@ export default function StoreAddProduct() {
             if (!images[1] && !images[2] && !images[3] && !images[4]) {
                 return toast.error('Please upload at least one image')
             }
-            if (productInfo.sizes.length === 0) {
-                return toast.error('Please select at least one size')
-            }
             setLoading(true)
 
             const formData = new FormData()
@@ -101,7 +89,7 @@ export default function StoreAddProduct() {
             formData.append('mrp', productInfo.mrp)
             formData.append('price', productInfo.price)
             formData.append('category', productInfo.category)
-            formData.append('size', productInfo.sizes.join(', ')) // Join sizes as comma-separated string
+            formData.append('size', productInfo.size)
 
             Object.keys(images).forEach((key) => {
                 images[key] && formData.append('images', images[key])
@@ -111,7 +99,7 @@ export default function StoreAddProduct() {
             const { data } = await axios.post('/api/store/product', formData, { headers: { Authorization: `Bearer ${token}` } })
             toast.success(data.message)
 
-            setProductInfo({ name: "", description: "", mrp: 0, price: 0, category: "", sizes: [] })
+            setProductInfo({ name: "", description: "", mrp: 0, price: 0, category: "", size: "" })
             setImages({ 1: null, 2: null, 3: null, 4: null })
             setAiUsed(false)
         } catch (error) {
@@ -175,22 +163,12 @@ export default function StoreAddProduct() {
                 ))}
             </select>
 
-            <div className="mb-6">
-                <p className="mb-3">Available Sizes</p>
-                <div className="grid grid-cols-3 gap-3 max-w-sm">
-                    {sizes.map((size) => (
-                        <label key={size} className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={productInfo.sizes.includes(size)}
-                                onChange={() => handleSizeChange(size)}
-                                className="w-4 h-4 cursor-pointer"
-                            />
-                            <span className="text-sm">{size}</span>
-                        </label>
-                    ))}
-                </div>
-            </div>
+            <select onChange={e => setProductInfo({ ...productInfo, size: e.target.value })} value={productInfo.size} className="w-full max-w-sm p-2 px-4 mb-6 outline-none border border-slate-200 rounded" required>
+                <option value="">Select a size</option>
+                {sizes.map((size) => (
+                    <option key={size} value={size}>{size}</option>
+                ))}
+            </select>
 
             <br />
 

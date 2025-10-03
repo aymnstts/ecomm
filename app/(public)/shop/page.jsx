@@ -18,10 +18,15 @@ function ShopContent() {
     const [priceRange, setPriceRange] = useState({ min: '', max: '' })
     const [sortBy, setSortBy] = useState('newest')
 
-    // Get unique categories
+    // Get unique categories from all products
     const categories = useMemo(() => {
-        const cats = [...new Set(products.map(p => p.category))]
-        return cats.filter(Boolean)
+        const cats = new Set()
+        products.forEach(p => {
+            if (p.categories && Array.isArray(p.categories)) {
+                p.categories.forEach(cat => cats.add(cat))
+            }
+        })
+        return Array.from(cats).filter(Boolean)
     }, [products])
 
     // Filter and sort products
@@ -32,41 +37,53 @@ function ShopContent() {
             )
             : [...products];
 
-        // Filter by category
+        // Filter by category - check if product's categories array includes selected category
         if (selectedCategory !== 'all') {
-            filtered = filtered.filter(p => p.category === selectedCategory)
+            filtered = filtered.filter(p => 
+                p.categories && Array.isArray(p.categories) && p.categories.includes(selectedCategory)
+            )
         }
 
         // Filter by price range
         if (priceRange.min !== '') {
-        filtered = filtered.filter(p => {
-        const minPrice = Math.min(...Object.values(p.sizes).map(s => Number(s.price)))
-        return minPrice >= Number(priceRange.min)
-        })
+            filtered = filtered.filter(p => {
+                if (!p.sizes || typeof p.sizes !== 'object') return false
+                const minPrice = Math.min(...Object.values(p.sizes).map(s => Number(s.price)))
+                return minPrice >= Number(priceRange.min)
+            })
         }
         if (priceRange.max !== '') {
-        filtered = filtered.filter(p => {
-        const maxPrice = Math.max(...Object.values(p.sizes).map(s => Number(s.price)))
-        return maxPrice <= Number(priceRange.max)
-        })
+            filtered = filtered.filter(p => {
+                if (!p.sizes || typeof p.sizes !== 'object') return false
+                const maxPrice = Math.max(...Object.values(p.sizes).map(s => Number(s.price)))
+                return maxPrice <= Number(priceRange.max)
+            })
         }
 
         // Sort products
         switch (sortBy) {
+            case 'newest':
+                filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                break
             case 'price-low':
-            filtered.sort((a, b) => {
-            const minA = Math.min(...Object.values(a.sizes).map(s => Number(s.price)))
-            const minB = Math.min(...Object.values(b.sizes).map(s => Number(s.price)))
-            return minA - minB
-            })
-            break
+                filtered.sort((a, b) => {
+                    const minA = Math.min(...Object.values(a.sizes).map(s => Number(s.price)))
+                    const minB = Math.min(...Object.values(b.sizes).map(s => Number(s.price)))
+                    return minA - minB
+                })
+                break
             case 'price-high':
-            filtered.sort((a, b) => {
-            const maxA = Math.max(...Object.values(a.sizes).map(s => Number(s.price)))
-            const maxB = Math.max(...Object.values(b.sizes).map(s => Number(s.price)))
-            return maxA - maxB
-            })
-    break
+                filtered.sort((a, b) => {
+                    const maxA = Math.max(...Object.values(a.sizes).map(s => Number(s.price)))
+                    const maxB = Math.max(...Object.values(b.sizes).map(s => Number(s.price)))
+                    return maxA - maxB
+                })
+                break
+            case 'name':
+                filtered.sort((a, b) => a.name.localeCompare(b.name))
+                break
+            default:
+                break
         }
 
         return filtered

@@ -17,12 +17,25 @@ export async function POST(request){
         const formData = await request.formData()
         const name = formData.get("name")
         const description = formData.get("description")
-        const category = formData.get("category")
+        const categoriesJson = formData.get("categories")
         const sizesJson = formData.get("sizes")
         const images = formData.getAll("images")
 
-        if(!name || !description || !category || !sizesJson || images.length < 1){
+        if(!name || !description || !categoriesJson || !sizesJson || images.length < 1){
             return NextResponse.json({error: 'missing product details'}, { status: 400 } )
+        }
+
+        // Parse the categories JSON
+        let categories
+        try {
+            categories = JSON.parse(categoriesJson)
+        } catch (error) {
+            return NextResponse.json({error: 'invalid categories format'}, { status: 400 } )
+        }
+
+        // Validate categories array
+        if(!categories || !Array.isArray(categories) || categories.length === 0){
+            return NextResponse.json({error: 'at least one category is required'}, { status: 400 } )
         }
 
         // Parse the sizes JSON
@@ -68,8 +81,8 @@ export async function POST(request){
              data: {
                 name,
                 description,
-                category,
-                sizes, // Store the entire sizes object
+                categories, // Array of categories
+                sizes, // Object with sizes
                 images: imagesUrl,
                 storeId
              }
@@ -82,7 +95,6 @@ export async function POST(request){
         return NextResponse.json({ error: error.code || error.message }, { status: 400 })
     }
 }
-
 // Get all products for a seller
 export async function GET(request){
     try {
@@ -98,5 +110,56 @@ export async function GET(request){
     } catch (error) {
         console.error(error);
         return NextResponse.json({ error: error.code || error.message }, { status: 400 })
+    }
+
+}
+// Delete a product
+export async function DELETE(request){
+    try {
+        const { userId } = getAuth(request)
+        const storeId = await authSeller(userId)
+
+        if(!storeId){
+            return NextResponse.json({error: 'not authorized'}, { status: 401 } )
+        }
+
+        const url = new URL(request.url)
+        const productId = url.searchParams.get('productId')
+
+        if(!productId){
+            return NextResponse.json({error: 'product ID required'}, { status: 400 } )
+        }
+
+        // Verify product belongs to this store
+        const product = await prisma.product.findUnique({
+            where: { id: productId },
+            include: { orderItems: true }
+        })
+
+        if(!product){
+            return NextResponse.json({error: 'product not found'}, { status: 404 } )
+        }
+
+        if(product.storeId !== storeId){
+            return NextResponse.json({error: 'unauthorized'}, { status: 403 } )
+        }
+
+        // Check if product has been ordered
+        if(product.orderItems && product.orderItems.length > 0){
+            return NextResponse.json({
+                error: 'Cannot delete product that has been ordered. You can mark it as out of stock instead.'
+            }, { status: 400 })
+        }
+
+        // Delete the product from database
+        await prisma.product.delete({
+            where: { id: productId }
+        })
+
+        return NextResponse.json({message: "Product deleted successfully"})
+
+    } catch (error) {
+        console.error('Delete error:', error);
+        return NextResponse.json({ error: error.message || 'Failed to delete product' }, { status: 400 })
     }
 }

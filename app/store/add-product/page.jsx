@@ -8,15 +8,15 @@ import { toast } from "react-hot-toast"
 
 export default function StoreAddProduct() {
 
-    const categories = ["Men", "Women", "Packs", "Samples", "Niche Fragrances"];
+    const categories = ["Men", "Women", "Unisex", "Packs", "Samples", "Niche Fragrances"];
     const sizes = ["5ML", "10ML", "30ML", "50ML", "60ML", "75ML", "100ML", "125ML", "200ML"];
 
     const [images, setImages] = useState({ 1: null, 2: null, 3: null, 4: null })
     const [productInfo, setProductInfo] = useState({
         name: "",
         description: "",
-        category: "",
     })
+    const [selectedCategories, setSelectedCategories] = useState([])
     const [selectedSizes, setSelectedSizes] = useState({})
     const [loading, setLoading] = useState(false)
     const [aiUsed, setAiUsed] = useState(false)
@@ -25,6 +25,16 @@ export default function StoreAddProduct() {
 
     const onChangeHandler = (e) => {
         setProductInfo({ ...productInfo, [e.target.name]: e.target.value })
+    }
+
+    const handleCategoryToggle = (category) => {
+        setSelectedCategories(prev => {
+            if (prev.includes(category)) {
+                return prev.filter(c => c !== category)
+            } else {
+                return [...prev, category]
+            }
+        })
     }
 
     const handleSizeToggle = (size) => {
@@ -80,7 +90,7 @@ export default function StoreAddProduct() {
                                         description: data.description
                                     }))
                                     setAiUsed(true)
-                                    return "AI filled product info 🎉"
+                                    return "AI filled product info"
                                 }
                                 return "AI could not analyze the image"
                             },
@@ -102,6 +112,10 @@ export default function StoreAddProduct() {
                 return toast.error('Please upload at least one image')
             }
 
+            if (selectedCategories.length === 0) {
+                return toast.error('Please select at least one category')
+            }
+
             if (Object.keys(selectedSizes).length === 0) {
                 return toast.error('Please select at least one size')
             }
@@ -118,9 +132,7 @@ export default function StoreAddProduct() {
             const formData = new FormData()
             formData.append('name', productInfo.name)
             formData.append('description', productInfo.description)
-            formData.append('category', productInfo.category)
-            
-            // Send sizes as JSON string
+            formData.append('categories', JSON.stringify(selectedCategories))
             formData.append('sizes', JSON.stringify(selectedSizes))
 
             Object.keys(images).forEach((key) => {
@@ -134,7 +146,8 @@ export default function StoreAddProduct() {
             
             toast.success(data.message)
 
-            setProductInfo({ name: "", description: "", category: "" })
+            setProductInfo({ name: "", description: "" })
+            setSelectedCategories([])
             setSelectedSizes({})
             setImages({ 1: null, 2: null, 3: null, 4: null })
             setAiUsed(false)
@@ -181,15 +194,22 @@ export default function StoreAddProduct() {
                 <textarea name="description" onChange={onChangeHandler} value={productInfo.description} placeholder="Enter product description" rows={5} className="w-full max-w-sm p-2 px-4 outline-none border border-slate-200 rounded resize-none" required />
             </label>
 
-            <label className="flex flex-col gap-2 my-6">
-                Category
-                <select onChange={e => setProductInfo({ ...productInfo, category: e.target.value })} value={productInfo.category} className="w-full max-w-sm p-2 px-4 outline-none border border-slate-200 rounded" required>
-                    <option value="">Select a category</option>
+            <div className="my-6">
+                <p className="mb-3 font-medium text-slate-700">Select Categories</p>
+                <div className="flex flex-wrap gap-3">
                     {categories.map((category) => (
-                        <option key={category} value={category}>{category}</option>
+                        <label key={category} className="flex items-center gap-2 cursor-pointer px-4 py-2 border border-slate-200 rounded hover:bg-slate-50 transition">
+                            <input
+                                type="checkbox"
+                                checked={selectedCategories.includes(category)}
+                                onChange={() => handleCategoryToggle(category)}
+                                className="w-4 h-4 cursor-pointer"
+                            />
+                            <span>{category}</span>
+                        </label>
                     ))}
-                </select>
-            </label>
+                </div>
+            </div>
 
             <div className="my-6">
                 <p className="mb-4 font-medium text-slate-700">Select Sizes and Set Prices</p>

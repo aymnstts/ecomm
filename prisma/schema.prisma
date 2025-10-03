@@ -30,7 +30,7 @@ model Product {
     name        String
     description String
     images      String[]
-    category    String
+    categories  String[] 
     sizes       Json
     inStock     Boolean  @default(true)
     storeId     String

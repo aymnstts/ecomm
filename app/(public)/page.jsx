@@ -13,6 +13,7 @@ export default function Home() {
             <BestSelling />
             <OurSpecs />
             <Newsletter />
+            
         </div>
     );
 }

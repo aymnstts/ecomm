@@ -29,11 +29,9 @@ model Product {
     id          String   @id @default(cuid())
     name        String
     description String
-    mrp         Float
-    price       Float
     images      String[]
     category    String
-    size        String
+    sizes       Json
     inStock     Boolean  @default(true)
     storeId     String
     createdAt   DateTime @default(now())
@@ -85,6 +83,7 @@ model OrderItem {
     productId String
     quantity  Int
     price     Float
+    size      String
 
     // Relations
     order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)

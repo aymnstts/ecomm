@@ -17,14 +17,32 @@ export async function POST(request){
         const formData = await request.formData()
         const name = formData.get("name")
         const description = formData.get("description")
-        const mrp =  Number(formData.get("mrp"))
-        const price = Number(formData.get("price"))
         const category = formData.get("category")
-        const size = formData.get("size")
+        const sizesJson = formData.get("sizes")
         const images = formData.getAll("images")
 
-        if(!name || !description || !mrp || !price || !category || !size || images.length < 1){
+        if(!name || !description || !category || !sizesJson || images.length < 1){
             return NextResponse.json({error: 'missing product details'}, { status: 400 } )
+        }
+
+        // Parse the sizes JSON
+        let sizes
+        try {
+            sizes = JSON.parse(sizesJson)
+        } catch (error) {
+            return NextResponse.json({error: 'invalid sizes format'}, { status: 400 } )
+        }
+
+        // Validate sizes object
+        if(!sizes || Object.keys(sizes).length === 0){
+            return NextResponse.json({error: 'at least one size is required'}, { status: 400 } )
+        }
+
+        // Validate each size has mrp and price
+        for (const [size, pricing] of Object.entries(sizes)) {
+            if(!pricing.mrp || !pricing.price){
+                return NextResponse.json({error: `missing price for size ${size}`}, { status: 400 } )
+            }
         }
 
         // Uploading Images to ImageKit
@@ -50,10 +68,8 @@ export async function POST(request){
              data: {
                 name,
                 description,
-                mrp,
-                price,
                 category,
-                size,
+                sizes, // Store the entire sizes object
                 images: imagesUrl,
                 storeId
              }

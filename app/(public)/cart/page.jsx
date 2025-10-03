@@ -23,21 +23,29 @@ export default function Cart() {
     const createCartArray = () => {
         setTotalPrice(0);
         const cartArray = [];
-        for (const [key, value] of Object.entries(cartItems)) {
-            const product = products.find(product => product.id === key);
+        
+        // Loop through cart items with new structure
+        for (const [cartKey, cartItem] of Object.entries(cartItems)) {
+            const { productId, size, price, mrp, quantity } = cartItem;
+            const product = products.find(p => p.id === productId);
+            
             if (product) {
                 cartArray.push({
                     ...product,
-                    quantity: value,
+                    selectedSize: size,
+                    selectedPrice: price,
+                    selectedMrp: mrp,
+                    quantity: quantity,
+                    cartKey: cartKey // Keep the key for deletion
                 });
-                setTotalPrice(prev => prev + product.price * value);
+                setTotalPrice(prev => prev + price * quantity);
             }
         }
         setCartArray(cartArray);
     }
 
-    const handleDeleteItemFromCart = (productId) => {
-        dispatch(deleteItemFromCart({ productId }))
+    const handleDeleteItemFromCart = (productId, size) => {
+        dispatch(deleteItemFromCart({ productId, size }))
     }
 
     useEffect(() => {
@@ -74,16 +82,16 @@ export default function Cart() {
                                             </div>
                                             <div>
                                                 <p className="max-sm:text-sm">{item.name}</p>
-                                                <p className="text-xs text-slate-500">{item.category}</p>
-                                                <p>{currency}{item.price}</p>
+                                                <p className="text-xs text-slate-500">{item.category} • {item.selectedSize}</p>
+                                                <p>{currency}{item.selectedPrice}</p>
                                             </div>
                                         </td>
                                         <td className="text-center">
-                                            <Counter productId={item.id} />
+                                            <Counter productId={item.id} size={item.selectedSize} />
                                         </td>
-                                        <td className="text-center">{currency}{(item.price * item.quantity).toLocaleString()}</td>
+                                        <td className="text-center">{currency}{(item.selectedPrice * item.quantity).toLocaleString()}</td>
                                         <td className="text-center max-md:hidden">
-                                            <button onClick={() => handleDeleteItemFromCart(item.id)} className=" text-red-500 hover:bg-red-50 p-2.5 rounded-full active:scale-95 transition-all">
+                                            <button onClick={() => handleDeleteItemFromCart(item.id, item.selectedSize)} className=" text-red-500 hover:bg-red-50 p-2.5 rounded-full active:scale-95 transition-all">
                                                 <Trash2Icon size={18} />
                                             </button>
                                         </td>

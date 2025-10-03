@@ -39,28 +39,34 @@ function ShopContent() {
 
         // Filter by price range
         if (priceRange.min !== '') {
-            filtered = filtered.filter(p => p.price >= Number(priceRange.min))
+        filtered = filtered.filter(p => {
+        const minPrice = Math.min(...Object.values(p.sizes).map(s => Number(s.price)))
+        return minPrice >= Number(priceRange.min)
+        })
         }
         if (priceRange.max !== '') {
-            filtered = filtered.filter(p => p.price <= Number(priceRange.max))
+        filtered = filtered.filter(p => {
+        const maxPrice = Math.max(...Object.values(p.sizes).map(s => Number(s.price)))
+        return maxPrice <= Number(priceRange.max)
+        })
         }
 
         // Sort products
         switch (sortBy) {
-            case 'newest':
-                filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                break
             case 'price-low':
-                filtered.sort((a, b) => a.price - b.price)
-                break
+            filtered.sort((a, b) => {
+            const minA = Math.min(...Object.values(a.sizes).map(s => Number(s.price)))
+            const minB = Math.min(...Object.values(b.sizes).map(s => Number(s.price)))
+            return minA - minB
+            })
+            break
             case 'price-high':
-                filtered.sort((a, b) => b.price - a.price)
-                break
-            case 'name':
-                filtered.sort((a, b) => a.name.localeCompare(b.name))
-                break
-            default:
-                break
+            filtered.sort((a, b) => {
+            const maxA = Math.max(...Object.values(a.sizes).map(s => Number(s.price)))
+            const maxB = Math.max(...Object.values(b.sizes).map(s => Number(s.price)))
+            return maxA - maxB
+            })
+    break
         }
 
         return filtered

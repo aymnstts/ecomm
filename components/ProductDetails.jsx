@@ -15,16 +15,30 @@ const ProductDetails = ({ product }) => {
 
     const cart = useSelector(state => state.cart.cartItems);
     const dispatch = useDispatch();
-
     const router = useRouter()
 
     const [mainImage, setMainImage] = useState(product.images[0]);
+    
+    // Get available sizes
+    const availableSizes = Object.keys(product.sizes || {})
+    const [selectedSize, setSelectedSize] = useState(availableSizes[0] || '')
+    
+    // Get pricing for selected size
+    const selectedPricing = product.sizes?.[selectedSize] || { price: 0, mrp: 0 }
+    const cartKey = `${productId}-${selectedSize}`
 
     const addToCartHandler = () => {
-        dispatch(addToCart({ productId }))
+        dispatch(addToCart({ 
+            productId,
+            size: selectedSize,
+            price: Number(selectedPricing.price),
+            mrp: Number(selectedPricing.mrp)
+        }))
     }
 
-    const averageRating = product.rating.reduce((acc, item) => acc + item.rating, 0) / product.rating.length;
+    const averageRating = product.rating.length > 0 
+        ? product.rating.reduce((acc, item) => acc + item.rating, 0) / product.rating.length
+        : 0;
     
     return (
         <div className="flex max-lg:flex-col gap-12">
@@ -48,25 +62,40 @@ const ProductDetails = ({ product }) => {
                     ))}
                     <p className="text-sm ml-3 text-slate-500">{product.rating.length} Reviews</p>
                 </div>
+
+                {/* Size Selection */}
+                <div className="my-6">
+                    <p className="text-sm text-slate-600 mb-2">Select Size</p>
+                    <select 
+                        value={selectedSize}
+                        onChange={(e) => setSelectedSize(e.target.value)}
+                        className="w-full max-w-xs px-4 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-slate-800"
+                    >
+                        {availableSizes.map((size) => (
+                            <option key={size} value={size}>{size}</option>
+                        ))}
+                    </select>
+                </div>
+
                 <div className="flex items-start my-6 gap-3 text-2xl font-semibold text-slate-800">
-                    <p> {currency}{product.price} </p>
-                    <p className="text-xl text-slate-500 line-through">{currency}{product.mrp}</p>
+                    <p> {currency}{selectedPricing.price} </p>
+                    <p className="text-xl text-slate-500 line-through">{currency}{selectedPricing.mrp}</p>
                 </div>
                 <div className="flex items-center gap-2 text-slate-500">
                     <TagIcon size={14} />
-                    <p>Save {((product.mrp - product.price) / product.mrp * 100).toFixed(0)}% right now</p>
+                    <p>Save {((selectedPricing.mrp - selectedPricing.price) / selectedPricing.mrp * 100).toFixed(0)}% right now</p>
                 </div>
                 <div className="flex items-end gap-5 mt-10">
                     {
-                        cart[productId] && (
+                        cart[cartKey] && (
                             <div className="flex flex-col gap-3">
                                 <p className="text-lg text-slate-800 font-semibold">Quantity</p>
-                                <Counter productId={productId} />
+                                <Counter productId={productId} size={selectedSize} />
                             </div>
                         )
                     }
-                    <button onClick={() => !cart[productId] ? addToCartHandler() : router.push('/cart')} className="bg-slate-800 text-white px-10 py-3 text-sm font-medium rounded hover:bg-slate-900 active:scale-95 transition">
-                        {!cart[productId] ? 'Add to Cart' : 'View Cart'}
+                    <button onClick={() => !cart[cartKey] ? addToCartHandler() : router.push('/cart')} className="bg-slate-800 text-white px-10 py-3 text-sm font-medium rounded hover:bg-slate-900 active:scale-95 transition">
+                        {!cart[cartKey] ? 'Add to Cart' : 'View Cart'}
                     </button>
                 </div>
                 <hr className="border-gray-300 my-5" />

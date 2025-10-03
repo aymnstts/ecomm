@@ -2,25 +2,38 @@
 import { addToCart, removeFromCart } from "@/lib/features/cart/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 
-const Counter = ({ productId }) => {
+const Counter = ({ productId, size }) => {
+    const dispatch = useDispatch()
+    const cartKey = `${productId}-${size}`
+    const cartItem = useSelector(state => state.cart.cartItems[cartKey])
+    const quantity = cartItem?.quantity || 0
 
-    const { cartItems } = useSelector(state => state.cart);
-
-    const dispatch = useDispatch();
-
-    const addToCartHandler = () => {
-        dispatch(addToCart({ productId }))
-    }
-
-    const removeFromCartHandler = () => {
-        dispatch(removeFromCart({ productId }))
+    const handleIncrement = () => {
+        if (cartItem) {
+            dispatch(addToCart({ 
+                productId, 
+                size,
+                price: cartItem.price,
+                mrp: cartItem.mrp
+            }))
+        }
     }
 
     return (
-        <div className="inline-flex items-center gap-1 sm:gap-3 px-3 py-1 rounded border border-slate-200 max-sm:text-sm text-slate-600">
-            <button onClick={removeFromCartHandler} className="p-1 select-none">-</button>
-            <p className="p-1">{cartItems[productId]}</p>
-            <button onClick={addToCartHandler} className="p-1 select-none">+</button>
+        <div className="flex items-center gap-3">
+            <button 
+                onClick={() => dispatch(removeFromCart({ productId, size }))}
+                className="w-8 h-8 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-100 active:scale-95 transition"
+            >
+                -
+            </button>
+            <span className="w-8 text-center">{quantity}</span>
+            <button 
+                onClick={handleIncrement}
+                className="w-8 h-8 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-100 active:scale-95 transition"
+            >
+                +
+            </button>
         </div>
     )
 }

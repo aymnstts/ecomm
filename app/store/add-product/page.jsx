@@ -15,11 +15,9 @@ export default function StoreAddProduct() {
     const [productInfo, setProductInfo] = useState({
         name: "",
         description: "",
-        mrp: "",
-        price: "",
         category: "",
-        size: "",
     })
+    const [selectedSizes, setSelectedSizes] = useState({})
     const [loading, setLoading] = useState(false)
     const [aiUsed, setAiUsed] = useState(false)
 
@@ -27,6 +25,28 @@ export default function StoreAddProduct() {
 
     const onChangeHandler = (e) => {
         setProductInfo({ ...productInfo, [e.target.name]: e.target.value })
+    }
+
+    const handleSizeToggle = (size) => {
+        setSelectedSizes(prev => {
+            const newSizes = { ...prev }
+            if (newSizes[size]) {
+                delete newSizes[size]
+            } else {
+                newSizes[size] = { mrp: "", price: "" }
+            }
+            return newSizes
+        })
+    }
+
+    const handleSizePrice = (size, field, value) => {
+        setSelectedSizes(prev => ({
+            ...prev,
+            [size]: {
+                ...prev[size],
+                [field]: value
+            }
+        }))
     }
 
     const handleImageUpload = async (key, file) => {
@@ -81,25 +101,41 @@ export default function StoreAddProduct() {
             if (!images[1] && !images[2] && !images[3] && !images[4]) {
                 return toast.error('Please upload at least one image')
             }
+
+            if (Object.keys(selectedSizes).length === 0) {
+                return toast.error('Please select at least one size')
+            }
+
+            // Validate all selected sizes have prices
+            for (const size of Object.keys(selectedSizes)) {
+                if (!selectedSizes[size].mrp || !selectedSizes[size].price) {
+                    return toast.error(`Please enter both prices for ${size}`)
+                }
+            }
+
             setLoading(true)
 
             const formData = new FormData()
             formData.append('name', productInfo.name)
             formData.append('description', productInfo.description)
-            formData.append('mrp', productInfo.mrp)
-            formData.append('price', productInfo.price)
             formData.append('category', productInfo.category)
-            formData.append('size', productInfo.size)
+            
+            // Send sizes as JSON string
+            formData.append('sizes', JSON.stringify(selectedSizes))
 
             Object.keys(images).forEach((key) => {
                 images[key] && formData.append('images', images[key])
             })
 
             const token = await getToken()
-            const { data } = await axios.post('/api/store/product', formData, { headers: { Authorization: `Bearer ${token}` } })
+            const { data } = await axios.post('/api/store/product', formData, { 
+                headers: { Authorization: `Bearer ${token}` } 
+            })
+            
             toast.success(data.message)
 
-            setProductInfo({ name: "", description: "", mrp: 0, price: 0, category: "", size: "" })
+            setProductInfo({ name: "", description: "", category: "" })
+            setSelectedSizes({})
             setImages({ 1: null, 2: null, 3: null, 4: null })
             setAiUsed(false)
         } catch (error) {
@@ -145,34 +181,59 @@ export default function StoreAddProduct() {
                 <textarea name="description" onChange={onChangeHandler} value={productInfo.description} placeholder="Enter product description" rows={5} className="w-full max-w-sm p-2 px-4 outline-none border border-slate-200 rounded resize-none" required />
             </label>
 
-            <div className="flex gap-5">
-                <label className="flex flex-col gap-2 ">
-                    Actual Price (MAD)
-                    <input type="number" name="mrp" onChange={onChangeHandler} value={productInfo.mrp} placeholder="0" className="w-full max-w-45 p-2 px-4 outline-none border border-slate-200 rounded" required />
-                </label>
-                <label className="flex flex-col gap-2 ">
-                    Offer Price (MAD)
-                    <input type="number" name="price" onChange={onChangeHandler} value={productInfo.price} placeholder="0" className="w-full max-w-45 p-2 px-4 outline-none border border-slate-200 rounded" required />
-                </label>
+            <label className="flex flex-col gap-2 my-6">
+                Category
+                <select onChange={e => setProductInfo({ ...productInfo, category: e.target.value })} value={productInfo.category} className="w-full max-w-sm p-2 px-4 outline-none border border-slate-200 rounded" required>
+                    <option value="">Select a category</option>
+                    {categories.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                    ))}
+                </select>
+            </label>
+
+            <div className="my-6">
+                <p className="mb-4 font-medium text-slate-700">Select Sizes and Set Prices</p>
+                <div className="space-y-4">
+                    {sizes.map((size) => (
+                        <div key={size} className="flex items-center gap-4 p-3 border border-slate-200 rounded">
+                            <label className="flex items-center gap-2 cursor-pointer min-w-[80px]">
+                                <input
+                                    type="checkbox"
+                                    checked={!!selectedSizes[size]}
+                                    onChange={() => handleSizeToggle(size)}
+                                    className="w-4 h-4 cursor-pointer"
+                                />
+                                <span className="font-medium">{size}</span>
+                            </label>
+                            
+                            {selectedSizes[size] && (
+                                <div className="flex gap-3 flex-1">
+                                    <input
+                                        type="number"
+                                        placeholder="Actual Price (MAD)"
+                                        value={selectedSizes[size].mrp}
+                                        onChange={(e) => handleSizePrice(size, 'mrp', e.target.value)}
+                                        className="flex-1 p-2 px-4 outline-none border border-slate-200 rounded"
+                                        required
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Offer Price (MAD)"
+                                        value={selectedSizes[size].price}
+                                        onChange={(e) => handleSizePrice(size, 'price', e.target.value)}
+                                        className="flex-1 p-2 px-4 outline-none border border-slate-200 rounded"
+                                        required
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            <select onChange={e => setProductInfo({ ...productInfo, category: e.target.value })} value={productInfo.category} className="w-full max-w-sm p-2 px-4 my-6 outline-none border border-slate-200 rounded" required>
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                ))}
-            </select>
-
-            <select onChange={e => setProductInfo({ ...productInfo, size: e.target.value })} value={productInfo.size} className="w-full max-w-sm p-2 px-4 mb-6 outline-none border border-slate-200 rounded" required>
-                <option value="">Select a size</option>
-                {sizes.map((size) => (
-                    <option key={size} value={size}>{size}</option>
-                ))}
-            </select>
-
-            <br />
-
-            <button disabled={loading} className="bg-slate-800 text-white px-6 mt-7 py-2 hover:bg-slate-900 rounded transition">Add Product</button>
+            <button disabled={loading} className="bg-slate-800 text-white px-6 mt-7 py-2 hover:bg-slate-900 rounded transition disabled:opacity-50 disabled:cursor-not-allowed">
+                Add Product
+            </button>
         </form>
     )
 }

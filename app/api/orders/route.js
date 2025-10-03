@@ -50,12 +50,23 @@ export async function POST(request){
          const ordersByStore = new Map()
 
          for(const item of items){
-            const product = await prisma.product.findUnique({where: {id: item.id}})
+            const product = await prisma.product.findUnique({where: {id: item.productId}})
+            if(!product){
+                return NextResponse.json({ error: `Product ${item.productId} not found` }, { status: 400 })
+            }
+            
             const storeId = product.storeId
             if(!ordersByStore.has(storeId)){
                 ordersByStore.set(storeId, [])
             }
-            ordersByStore.get(storeId).push({...item, price: product.price})
+            
+            // Use the price sent from frontend (which is for the selected size)
+            ordersByStore.get(storeId).push({
+                productId: item.productId,
+                quantity: item.quantity,
+                price: item.price,
+                size: item.size
+            })
          }
 
          let orderIds = [];
@@ -88,9 +99,10 @@ export async function POST(request){
                      coupon: coupon ? coupon : {},
                       orderItems: {
                         create: sellerItems.map(item => ({
-                            productId: item.id,
+                            productId: item.productId,
                             quantity: item.quantity,
-                            price: item.price
+                            price: item.price,
+                            size: item.size
                         }))
                       }
                 }

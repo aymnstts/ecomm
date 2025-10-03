@@ -45,14 +45,13 @@ export default function StoreOrders() {
        }
     }
 
-        //  / Updated deleteOrder function - opens confirmation modal
-        const openDeleteConfirm = (orderId, e) => {
+    const openDeleteConfirm = (orderId, e) => {
         e.stopPropagation()
         setOrderToDelete(orderId)
         setDeleteConfirmModal(true)
-        }
+    }
 
-        const confirmDelete = async () => {
+    const confirmDelete = async () => {
         try {
             const token = await getToken()
             await axios.delete(`/api/store/orders?orderId=${orderToDelete}`, {
@@ -67,12 +66,12 @@ export default function StoreOrders() {
             console.error('Delete error:', error)
             toast.error(error?.response?.data?.error || error.message)
         }
-        }
+    }
 
-const cancelDelete = () => {
-    setDeleteConfirmModal(false)
-    setOrderToDelete(null)
-}
+    const cancelDelete = () => {
+        setDeleteConfirmModal(false)
+        setOrderToDelete(null)
+    }
 
     const openModal = (order) => {
         setSelectedOrder(order)
@@ -154,6 +153,7 @@ const cancelDelete = () => {
                         <thead>
                             <tr style={{ borderBottom: '1px solid #ccc', backgroundColor: '#f5f5f5' }}>
                                 <th style={{ textAlign: 'left', padding: '4px', fontWeight: 'bold' }}>Product</th>
+                                <th style={{ textAlign: 'center', padding: '4px', fontWeight: 'bold' }}>Size</th>
                                 <th style={{ textAlign: 'center', padding: '4px', fontWeight: 'bold' }}>Qty</th>
                                 <th style={{ textAlign: 'right', padding: '4px', fontWeight: 'bold' }}>Price</th>
                             </tr>
@@ -162,6 +162,7 @@ const cancelDelete = () => {
                             {order.orderItems.map((item, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
                                     <td style={{ padding: '4px' }}>{item.product?.name}</td>
+                                    <td style={{ textAlign: 'center', padding: '4px', fontWeight: 'bold' }}>{item.size}</td>
                                     <td style={{ textAlign: 'center', padding: '4px' }}>{item.quantity}</td>
                                     <td style={{ textAlign: 'right', padding: '4px' }}>{item.price} MAD</td>
                                 </tr>
@@ -278,15 +279,15 @@ const cancelDelete = () => {
                                                     <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clipRule="evenodd" />
                                                 </svg>
                                             </button>
-                                                <button
+                                            <button
                                                 onClick={(e) => openDeleteConfirm(order.id, e)}
                                                 className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                                                 title="Delete Order"
-                                                >
+                                            >
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                                 </svg>
-                                                </button>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -325,9 +326,10 @@ const cancelDelete = () => {
                                             className="w-16 h-16 object-cover rounded"
                                         />
                                         <div className="flex-1">
-                                            <p className="text-slate-800">{item.product?.name}</p>
-                                            <p>Qty: {item.quantity}</p>
-                                            <p>Price: {item.price} MAD</p>
+                                            <p className="text-slate-800 font-medium">{item.product?.name}</p>
+                                            <p className="text-sm"><span className="text-green-700">Size:</span> {item.size}</p>
+                                            <p className="text-sm">Qty: {item.quantity}</p>
+                                            <p className="text-sm">Price: {item.price} MAD</p>
                                         </div>
                                     </div>
                                 ))}
@@ -365,41 +367,41 @@ const cancelDelete = () => {
             )}
 
             {deleteConfirmModal && (
-    <div onClick={cancelDelete} className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-        <div onClick={e => e.stopPropagation()} className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 mx-4">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
+                <div onClick={cancelDelete} className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+                    <div onClick={e => e.stopPropagation()} className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 mx-4">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900">Delete Order</h3>
+                                <p className="text-sm text-gray-500">Order #{orderToDelete}</p>
+                            </div>
+                        </div>
+                        
+                        <p className="text-gray-600 mb-6">
+                            Are you sure you want to delete this order? This action cannot be undone and all order data will be permanently removed.
+                        </p>
+                        
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={cancelDelete}
+                                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                            >
+                                Delete Order
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Delete Order</h3>
-                    <p className="text-sm text-gray-500">Order #{orderToDelete}</p>
-                </div>
-            </div>
-            
-            <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this order? This action cannot be undone and all order data will be permanently removed.
-            </p>
-            
-            <div className="flex gap-3 justify-end">
-                <button
-                    onClick={cancelDelete}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-                >
-                    Cancel
-                </button>
-                <button
-                    onClick={confirmDelete}
-                    className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-medium"
-                >
-                    Delete Order
-                </button>
-            </div>
-        </div>
-    </div>
-)}
+            )}
 
             {/* Print-only Receipts */}
             <div className="print-receipt" style={{ display: 'none' }}>

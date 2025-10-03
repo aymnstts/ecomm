@@ -43,45 +43,51 @@ const OrderSummary = ({ totalPrice, items }) => {
         
     }
 
-    const handlePlaceOrder = async (e) => {
-        e.preventDefault();
-        try {
-            if(!user){
-                return toast('Please login to place an order')
-            }
-            if(!selectedAddress){
-                return toast('Please select an address')
-            }
-            const token = await getToken();
+const handlePlaceOrder = async (e) => {
+    e.preventDefault();
+    try {
+        if(!user){
+            return toast('Please login to place an order')
+        }
+        if(!selectedAddress){
+            return toast('Please select an address')
+        }
+        const token = await getToken();
 
-            const orderData = {
-                addressId: selectedAddress.id,
-                items,
-                paymentMethod
-            }
+        // Transform items to include the correct price and size info
+        const orderItems = items.map(item => ({
+            productId: item.id,
+            quantity: item.quantity,
+            price: item.selectedPrice,
+            size: item.selectedSize
+        }));
 
-            if(coupon){
-                orderData.couponCode = coupon.code
-            }
-           // create order
-           const {data} = await axios.post('/api/orders', orderData, {
-            headers: { Authorization: `Bearer ${token}` }
-           })
-
-           if(paymentMethod === 'STRIPE'){
-            window.location.href = data.session.url;
-           }else{
-            toast.success(data.message)
-            router.push('/orders')
-            dispatch(fetchCart({getToken}))
-           }
-
-        } catch (error) {
-            toast.error(error?.response?.data?.error || error.message)
+        const orderData = {
+            addressId: selectedAddress.id,
+            items: orderItems,
+            paymentMethod
         }
 
-        
+        if(coupon){
+            orderData.couponCode = coupon.code
+        }
+       // create order
+       const {data} = await axios.post('/api/orders', orderData, {
+        headers: { Authorization: `Bearer ${token}` }
+       })
+
+       if(paymentMethod === 'STRIPE'){
+        window.location.href = data.session.url;
+       }else{
+        toast.success(data.message)
+        router.push('/orders')
+        dispatch(fetchCart({getToken}))
+       }
+
+    } catch (error) {
+        toast.error(error?.response?.data?.error || error.message)
     }
+}
 
     return (
         <div className='w-full max-w-lg lg:max-w-[340px] bg-slate-50/30 border border-slate-200 text-slate-500 text-sm rounded-xl p-7'>

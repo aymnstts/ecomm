@@ -1,5 +1,5 @@
 'use client'
-import { PackageIcon, Search, ShoppingCart } from "lucide-react";
+import { PackageIcon, Search, ShoppingCart, Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,7 @@ const Navbar = () => {
     const router = useRouter();
 
     const [search, setSearch] = useState('')
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const cartCount = useSelector(state => state.cart.total)
 
     const handleSearch = (e) => {
@@ -22,10 +23,14 @@ const Navbar = () => {
         router.push(`/shop?search=${search}`)
     }
 
+    const closeMobileMenu = () => {
+        setMobileMenuOpen(false)
+    }
+
     return (
         <nav className="relative bg-white">
             <div className="mx-6">
-                <div className="flex items-center justify-between max-w-7xl mx-auto py-4  transition-all">
+                <div className="flex items-center justify-between max-w-7xl mx-auto py-4 transition-all">
 
                     <Link href="/" className="relative flex items-center">
                         <Image 
@@ -47,8 +52,8 @@ const Navbar = () => {
                     <div className="hidden sm:flex items-center gap-4 lg:gap-8 text-slate-600">
                         <Link href="/">Home</Link>
                         <Link href="/shop">Shop</Link>
-                        <Link href="/">About</Link>
-                        <Link href="/">Contact</Link>
+                        <Link href="/about">About</Link>
+                        <Link href="/contact">Contact</Link>
 
                         <form onSubmit={handleSearch} className="hidden xl:flex items-center w-xs text-sm gap-2 bg-slate-100 px-4 py-3 rounded-full">
                             <Search size={18} className="text-slate-600" />
@@ -74,35 +79,76 @@ const Navbar = () => {
                             </UserButton>
                         )
                     }
-                        
-
                     </div>
 
-                    {/* Mobile User Button  */}
-                    <div className="sm:hidden">
+                    {/* Mobile Menu Button & User */}
+                    <div className="sm:hidden flex items-center gap-3">
+                        <Link href="/cart" className="relative">
+                            <ShoppingCart size={20} className="text-slate-600" />
+                            {cartCount > 0 && (
+                                <span className="absolute -top-1 -right-1 text-[8px] text-white bg-slate-600 size-3.5 rounded-full flex items-center justify-center">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </Link>
+
                         { user ? (
-                            <div>
-                            <UserButton>
-                                <UserButton.MenuItems>
-                                    <UserButton.Action labelIcon={<ShoppingCart size={16}/>} label="Cart" onClick={()=> router.push('/cart')}/>
-                                </UserButton.MenuItems>
-                            </UserButton>
                             <UserButton>
                                 <UserButton.MenuItems>
                                     <UserButton.Action labelIcon={<PackageIcon size={16}/>} label="My Orders" onClick={()=> router.push('/orders')}/>
                                 </UserButton.MenuItems>
                             </UserButton>
-                            </div>
                         ) : (
-                            <button onClick={openSignIn} className="px-7 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-sm transition text-white rounded-full">
-                            Login
+                            <button onClick={openSignIn} className="px-5 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-sm transition text-white rounded-full">
+                                Login
+                            </button>
+                        )}
+
+                        <button 
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="text-slate-600"
+                        >
+                            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
-                        )
-                        }
-                        
                     </div>
                 </div>
             </div>
+
+            {/* Mobile Menu */}
+            {mobileMenuOpen && (
+                <div className="sm:hidden absolute top-full left-0 right-0 bg-white shadow-lg z-50 border-t border-gray-200">
+                    <div className="flex flex-col p-6 space-y-4 text-slate-600">
+                        <Link href="/" onClick={closeMobileMenu} className="py-2 hover:text-slate-900 transition">
+                            Home
+                        </Link>
+                        <Link href="/shop" onClick={closeMobileMenu} className="py-2 hover:text-slate-900 transition">
+                            Shop
+                        </Link>
+                        <Link href="/about" onClick={closeMobileMenu} className="py-2 hover:text-slate-900 transition">
+                            About
+                        </Link>
+                        <Link href="/contact" onClick={closeMobileMenu} className="py-2 hover:text-slate-900 transition">
+                            Contact
+                        </Link>
+
+                        {/* Mobile Search */}
+                        <form onSubmit={(e) => { handleSearch(e); closeMobileMenu(); }} className="pt-4 border-t border-gray-200">
+                            <div className="flex items-center gap-2 bg-slate-100 px-4 py-3 rounded-full">
+                                <Search size={18} className="text-slate-600" />
+                                <input 
+                                    className="w-full bg-transparent outline-none placeholder-slate-600 text-sm" 
+                                    type="text" 
+                                    placeholder="Search products" 
+                                    value={search} 
+                                    onChange={(e) => setSearch(e.target.value)} 
+                                    required 
+                                />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <hr className="border-gray-300" />
         </nav>
     )

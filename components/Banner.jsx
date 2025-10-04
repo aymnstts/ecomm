@@ -15,7 +15,7 @@ export default function Banner() {
     return isOpen && (
         <div className="w-full px-6 py-1 font-medium text-sm text-white text-center bg-gradient-to-r from-gray-500 via-[#000] to-[#0e0030]">
             <div className='flex items-center justify-between max-w-7xl  mx-auto'>
-                <p>🚚Cash On Delivery! 5% OFF your First Order</p>
+                <p>🚚Cash On Delivery! USE NEW5 & GET 5% OFF your First Order</p>
                 <div className="flex items-center space-x-6">
                     <button onClick={handleClaim} type="button" className="font-normal text-gray-800 bg-white px-7 py-2 rounded-full max-sm:hidden">Claim Offer</button>
                     <button onClick={() => setIsOpen(false)} type="button" className="font-normal text-gray-800 py-2 rounded-full">

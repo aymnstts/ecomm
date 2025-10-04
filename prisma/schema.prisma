@@ -170,3 +170,21 @@ model ContactMessage {
   message   String
   createdAt DateTime @default(now())
 }
+
+model Analytics {
+  id          String   @id @default(cuid())
+  path        String
+  ip          String
+  userAgent   String   @db.Text
+  referrer    String?
+  device      String   // mobile, tablet, desktop
+  browser     String
+  country     String?
+  city        String?
+  countryCode String?
+  timestamp   DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([ip])
+  @@index([path])
+}

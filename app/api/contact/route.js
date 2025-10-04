@@ -62,3 +62,32 @@ export async function GET(request) {
         )
     }
 }
+// Delete a contact message (for admin)
+export async function DELETE(request) {
+    try {
+        const { searchParams } = new URL(request.url)
+        const id = searchParams.get('id')
+
+        if (!id) {
+            return NextResponse.json(
+                { error: 'Message ID is required' }, 
+                { status: 400 }
+            )
+        }
+
+        await prisma.contactMessage.delete({
+            where: { id }
+        })
+
+        return NextResponse.json({ 
+            message: 'Message deleted successfully' 
+        })
+
+    } catch (error) {
+        console.error('Delete message error:', error)
+        return NextResponse.json(
+            { error: 'Failed to delete message' }, 
+            { status: 500 }
+        )
+    }
+}

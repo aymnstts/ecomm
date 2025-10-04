@@ -16,17 +16,20 @@ const Footer = () => {
         {
             title: "PRODUCTS",
             links: [
-                { text: "Men perfumes", path: '/', icon: null },
-                { text: "Women Perfumes", path: '/', icon: null },
+                { text: "Men perfumes", path: '/shop', icon: null },
+                { text: "Women Perfumes", path: '/shop', icon: null },
                 { text: "Packs", path: '/', icon: null },
-                { text: "Niche Perfumes", path: '/', icon: null },
+                { text: "Niche Perfumes", path: '/shop', icon: null },
             ]
         },
         {
             title: "WEBSITE?",
             links: [
                 { text: "Home", path: '/', icon: null },
-                { text: "Privacy Policy", path: '/', icon: null },
+                { text: "About", path: '/privacy-policy', icon: null },
+                { text: "Contact", path: '/privacy-policy', icon: null },
+                { text: "Privacy Policy", path: '/privacy-policy', icon: null },
+
                 // { text: "Become Plus Member", path: '/pricing', icon: null },
                 // { text: "Create Your Store", path: '/create-store', icon: null },
             ]
@@ -43,7 +46,7 @@ const Footer = () => {
 
     const socialIcons = [
         { icon: InstagramIcon, link: "https://www.instagram.com/auraparfums1/" },
-        { icon: TikTokIcon, link: "https://www.tiktok.com/@auraparfums" },
+        { icon: TikTokIcon, link: "https://www.tiktok.com/@auraparfums.ma" },
     ]
 
     return (

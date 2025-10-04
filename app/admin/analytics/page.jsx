@@ -5,7 +5,9 @@ import Loading from "@/components/Loading"
 export default function Analytics() {
     const [analytics, setAnalytics] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [timeRange, setTimeRange] = useState('7d') // 24h, 7d, 30d, all
+    const [timeRange, setTimeRange] = useState('7d')
+    const [showClearConfirm, setShowClearConfirm] = useState(false)
+    const [clearing, setClearing] = useState(false)
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -22,35 +24,98 @@ export default function Analytics() {
         fetchAnalytics()
     }, [timeRange])
 
+    const handleClearAllData = async () => {
+        setClearing(true)
+        try {
+            const res = await fetch('/api/analytics', {
+                method: 'DELETE',
+            })
+
+            if (res.ok) {
+                const refreshRes = await fetch(`/api/analytics?range=${timeRange}`)
+                const data = await refreshRes.json()
+                setAnalytics(data)
+                setShowClearConfirm(false)
+            } else {
+                alert('Failed to clear analytics data')
+            }
+        } catch (error) {
+            console.error('Clear error:', error)
+            alert('Failed to clear analytics data')
+        } finally {
+            setClearing(false)
+        }
+    }
+
     if (loading) return <Loading />
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            {/* Header with Clear Button and Time Filters */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl">Site <span className="font-medium">Analytics</span></h1>
                 
-                {/* Time Range Filter */}
-                <div className="flex gap-2">
-                    {[
-                        { label: '24 Hours', value: '24h' },
-                        { label: '7 Days', value: '7d' },
-                        { label: '30 Days', value: '30d' },
-                        { label: 'All Time', value: 'all' }
-                    ].map(range => (
-                        <button
-                            key={range.value}
-                            onClick={() => setTimeRange(range.value)}
-                            className={`px-4 py-2 rounded text-sm font-medium transition ${
-                                timeRange === range.value
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white text-slate-600 hover:bg-slate-100 border'
-                            }`}
-                        >
-                            {range.label}
-                        </button>
-                    ))}
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    {/* Clear All Data Button */}
+                    <button
+                        onClick={() => setShowClearConfirm(true)}
+                        className="px-4 py-2 bg-black text-white rounded hover:bg-red-700 text-sm font-medium transition"
+                    >
+                        🗑️ Clear All Data
+                    </button>
+
+                    {/* Time Range Filter */}
+                    <div className="flex gap-2 flex-wrap">
+                        {[
+                            { label: '24 Hours', value: '24h' },
+                            { label: '7 Days', value: '7d' },
+                            { label: '30 Days', value: '30d' },
+                            { label: 'All Time', value: 'all' }
+                        ].map(range => (
+                            <button
+                                key={range.value}
+                                onClick={() => setTimeRange(range.value)}
+                                className={`px-4 py-2 rounded text-sm font-medium transition ${
+                                    timeRange === range.value
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-white text-slate-600 hover:bg-slate-100 border'
+                                }`}
+                            >
+                                {range.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
+
+            {/* Clear Confirmation Modal */}
+            {showClearConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md mx-4">
+                        <h3 className="text-lg font-semibold mb-2 text-red-600">⚠️ Clear All Analytics Data?</h3>
+                        <p className="text-slate-600 mb-4">
+                            This will permanently delete <strong>all analytics data</strong> from your database. 
+                            This action cannot be undone.
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setShowClearConfirm(false)}
+                                disabled={clearing}
+                                className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleClearAllData}
+                                disabled={clearing}
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {clearing ? 'Clearing...' : 'Yes, Clear All Data'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

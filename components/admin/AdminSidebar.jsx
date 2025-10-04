@@ -19,7 +19,7 @@ const AdminSidebar = () => {
         // { name: 'Approve Store', href: '/admin/approve', icon: ShieldCheckIcon },
         { name: 'Coupons', href: '/admin/coupons', icon: TicketPercentIcon },
         { name: 'Messages', href: '/admin/messages', icon: MessageSquare },
-        { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+        // { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     ]
 
     return user && (

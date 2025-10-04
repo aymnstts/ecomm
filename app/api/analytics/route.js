@@ -146,6 +146,24 @@ export async function GET(request) {
     }
 }
 
+// Delete all analytics data
+export async function DELETE(request) {
+    try {
+        await prisma.analytics.deleteMany({})
+
+        return NextResponse.json({ 
+            message: 'All analytics data cleared successfully' 
+        })
+
+    } catch (error) {
+        console.error('Clear analytics error:', error)
+        return NextResponse.json(
+            { error: 'Failed to clear analytics data' },
+            { status: 500 }
+        )
+    }
+}
+
 function calculateAvgSessionTime(visits) {
     if (visits.length === 0) return '0s'
     

@@ -1,29 +1,34 @@
 // app/api/analytics/track/route.js
 import prisma from "@/lib/prisma"
 import { NextResponse } from "next/server"
-import { UAParser } from 'ua-parser-js'
 
 export async function POST(request) {
+    console.log('📥 Track API called')
+    
     try {
-        const { path, userAgent, referer, ip, timestamp } = await request.json()
+        const body = await request.json()
+        console.log('📦 Received data:', body)
 
-        // Parse user agent
-        const parser = new UAParser(userAgent)
-        const result = parser.getResult()
+        const { path, userAgent, referer, ip, timestamp } = body
 
-        // Determine device type
+        // Simple device detection without ua-parser-js for now
         let device = 'desktop'
-        if (result.device.type === 'mobile') device = 'mobile'
-        else if (result.device.type === 'tablet') device = 'tablet'
+        let browser = 'Unknown'
+        
+        if (userAgent) {
+            if (/mobile/i.test(userAgent)) device = 'mobile'
+            else if (/tablet/i.test(userAgent)) device = 'tablet'
+            
+            if (/chrome/i.test(userAgent)) browser = 'Chrome'
+            else if (/safari/i.test(userAgent)) browser = 'Safari'
+            else if (/firefox/i.test(userAgent)) browser = 'Firefox'
+            else if (/edge/i.test(userAgent)) browser = 'Edge'
+        }
 
-        // Get browser name
-        const browser = result.browser.name || 'Unknown'
+        console.log('💾 Saving to database...')
 
-        // Get location data (you'll need to integrate a GeoIP service)
-        const locationData = await getLocationFromIP(ip)
-
-        // Store analytics
-        await prisma.analytics.create({
+        // Store analytics without location for now
+        const result = await prisma.analytics.create({
             data: {
                 path,
                 ip,
@@ -31,45 +36,22 @@ export async function POST(request) {
                 referrer: referer || 'Direct',
                 device,
                 browser,
-                country: locationData.country,
-                city: locationData.city,
-                countryCode: locationData.countryCode,
+                country: 'Unknown',
+                city: null,
+                countryCode: 'unknown',
                 timestamp: new Date(timestamp)
             }
         })
 
-        return NextResponse.json({ success: true })
+        console.log('✅ Saved successfully:', result.id)
+
+        return NextResponse.json({ success: true, id: result.id })
 
     } catch (error) {
-        console.error('Analytics tracking error:', error)
+        console.error('❌ Analytics tracking error:', error)
         return NextResponse.json(
-            { error: 'Failed to track visit' },
+            { error: 'Failed to track visit', details: error.message },
             { status: 500 }
         )
-    }
-}
-
-async function getLocationFromIP(ip) {
-    try {
-        // Using ip-api.com (free service, 45 requests per minute)
-        // For production, consider using ipinfo.io, ipgeolocation.io, or maxmind
-        const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city,countryCode`)
-        const data = await response.json()
-
-        if (data.status === 'success') {
-            return {
-                country: data.country,
-                city: data.city,
-                countryCode: data.countryCode
-            }
-        }
-    } catch (error) {
-        console.error('GeoIP lookup error:', error)
-    }
-
-    return {
-        country: 'Unknown',
-        city: null,
-        countryCode: 'unknown'
     }
 }
